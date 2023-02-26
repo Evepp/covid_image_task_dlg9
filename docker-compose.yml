@@ -1,0 +1,19 @@
+# Remember to pass --service-ports to publish ports and make the server accessible on port 9999
+# For use with digital ocean droplets
+
+version: "3.8"
+services:
+  notebook:
+    image: diegosp10/dl-assignment:latest
+    command: jupyter notebook --port 9999 --NotebookApp.open_browser=False --NotebookApp.ip='0.0.0.0' --allow-root --NotebookApp.notebook_dir=/deep_learning_assignment
+    environment:
+      - USER=$USER
+      - TZ=America/New_York
+    ports:
+      - 9999:9999
+    tty: true
+    restart: always
+    volumes:
+      - type: bind
+        source: ~/deep_learning_assignment
+        target: /deep_learning_assignment

@@ -72,7 +72,7 @@ def restrict_sample_vp_imb(proportion, data, labels):
         for e in tmp:
             restricted_sample_indices.add(e)
     
-    tmp = random.sample(classified_instances[:-2], k=int(len(i)*(proportion+0.2)))
+    tmp = random.sample(classified_instances[-2], k=int(len(i)*(proportion+0.2)))
     for e in tmp:
             restricted_sample_indices.add(e)
 

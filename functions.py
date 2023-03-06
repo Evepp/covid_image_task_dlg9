@@ -15,6 +15,10 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from skimage import io, color
 import random
+from keras.applications.vgg16 import VGG16
+from tensorflow.keras import layers
+from keras.models import Model
+from keras.callbacks import EarlyStopping
 
 ######################################################################################################################################
 ######################################################################################################################################
@@ -81,6 +85,26 @@ def restrict_sample_vp_imb(proportion, data, labels):
     restricted_sample = [data[i] for i in restricted_sample_indices]
 
     return restricted_sample, restricted_sample_labels
+
+
+def generate_summary(sum_type, original, new):
+
+    if sum_type == "R":
+        sum_type = "RESTRICTED"
+    elif sum_type == "A":
+        sum_type = "AUGMENTED"
+
+    print(f"SAMPLE {sum_type} SUMMARY")
+    print("(Only covering training sample)")
+    print("")
+    print("")
+    print("ORIGINAL TRAINING SAMPLE")
+    print(F"Original number of instances: {len(original)}")
+    print(f"Original instance distribution by class: \n {pd.Series(original).value_counts()}")
+    print("")
+    print("RESTRICTED TRAINING SAMPLE")
+    print(f"Number of instances in restricted sample: {len(new)}")
+    print(f"Instance distribution by class in restricted sample: \n {pd.Series(new).value_counts()}")
 
 ######################################################################################################################################
 ######################################################################################################################################

@@ -19,6 +19,22 @@ from keras.applications.vgg16 import VGG16
 from tensorflow.keras import layers
 from keras.models import Model
 from keras.callbacks import EarlyStopping
+from tensorflow import keras
+import matplotlib.pyplot as plt
+import matplotlib 
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+from tensorflow import keras
+import keras.backend as K
+import matplotlib.pyplot as plt
+from keras.regularizers import l2
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
 
 ######################################################################################################################################
 ######################################################################################################################################
@@ -90,9 +106,9 @@ def restrict_sample_vp_imb(proportion, data, labels):
 def generate_summary(sum_type, original, new):
 
     if sum_type == "R":
-        sum_type = "RESTRICTED"
+        sum_type = "RESTRICTION"
     elif sum_type == "A":
-        sum_type = "AUGMENTED"
+        sum_type = "AUGMENTATION"
 
     print(f"SAMPLE {sum_type} SUMMARY")
     print("(Only covering training sample)")
@@ -102,9 +118,9 @@ def generate_summary(sum_type, original, new):
     print(F"Original number of instances: {len(original)}")
     print(f"Original instance distribution by class: \n {pd.Series(original).value_counts()}")
     print("")
-    print("RESTRICTED TRAINING SAMPLE")
-    print(f"Number of instances in restricted sample: {len(new)}")
-    print(f"Instance distribution by class in restricted sample: \n {pd.Series(new).value_counts()}")
+    print("NEW TRAINING SAMPLE")
+    print(f"Number of instances in new sample: {len(new)}")
+    print(f"Instance distribution by class in new sample: \n {pd.Series(new).value_counts()}")
 
 ######################################################################################################################################
 ######################################################################################################################################
@@ -244,3 +260,236 @@ def augment_sample(features, labels, a_rotate = False):
         
         return augmentedfeatures, augmentedlabels
 
+
+######################################################################################################################################
+######################################################################################################################################
+# BASELINE MODEL
+######################################################################################################################################
+######################################################################################################################################
+
+def build_baseline_model():
+    model = keras.Sequential([
+        # Convolutional layers
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', input_shape=(156, 156, 3)),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        
+        # Dense layers
+        keras.layers.Flatten(),
+        keras.layers.Dense(32, activation='relu'),
+        keras.layers.Dense(32, activation='relu'),
+        keras.layers.Dense(4, activation='softmax')
+    ])
+
+    # Compile the model with appropriate loss function, optimizer, and metrics
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    return model
+
+
+
+######################################################################################################################################
+######################################################################################################################################
+# TUNED MODEL
+######################################################################################################################################
+######################################################################################################################################
+
+
+def build_tuned_model():
+    model = keras.Sequential([
+    # Convolutional layers
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.01), input_shape=(156, 156, 3),kernel_regularizer=l2(0.01)),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    # (CHANGE VS BASELINE) Adding another pack of Conv2D and MaxPooling2D layers
+    #keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
+    #keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
+    #keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+  
+    # Dense layers
+    keras.layers.Flatten(),
+    keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
+    # (CHANGE VS BASELINE) Adding Dropout
+    #keras.layers.Dropout(0.3),
+    keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
+    # (CHANGE VS BASELINE) Adding an extra dense layer
+    #keras.layers.Dense(16, activation=keras.layers.LeakyReLU(alpha=0.1)),
+    # (CHANGE VS BASELINE) Adding Dropout
+    #keras.layers.Dropout(0.3)
+    keras.layers.Dense(4, activation='softmax')])
+    # Compile the model with appropriate loss function, optimizer, and metrics
+    # (CHANGE VS BASELINE) Adding the optimal lr
+    optim = keras.optimizers.Nadam(learning_rate=0.001) #(CHANGE VS BASELINE) optimizer = adam, nadam, sgd, rmsprop
+
+    model.compile(loss='categorical_crossentropy', optimizer=optim, metrics=['accuracy'])
+    return model
+
+
+
+######################################################################################################################################
+######################################################################################################################################
+# HYBRID MODEL
+######################################################################################################################################
+######################################################################################################################################
+
+def build_h_model():
+    '''restnet blocks'''
+    input_shape = (156, 156, 3)
+    inputs = keras.Input(shape=input_shape)
+     # Convolutional layers
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.01),  padding='same')(inputs)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), padding='same')(x)
+    x = keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+
+    #  block 1
+    out=x
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.add([out, x])
+    x = keras.layers.LeakyReLU(alpha=0.1)(x)
+
+    #  block 2
+    out=x
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.add([out, x])
+    x = keras.layers.LeakyReLU(alpha=0.1)(x)
+    #  block 3
+    out=x
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.add([out, x])
+    x = keras.layers.LeakyReLU(alpha=0.1)(x)
+    # Dense layers
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
+    outputs = keras.layers.Dense(4, activation='softmax')(x)
+    optim = keras.optimizers.Nadam(learning_rate=0.001) 
+
+
+    # Create model
+    model = keras.Model(inputs=inputs, outputs=outputs, name='h_model')
+
+    # Compile the model with appropriate loss function, optimizer, and metrics
+    model.compile(loss='categorical_crossentropy', optimizer=optim, metrics=['accuracy'])
+    return model
+
+
+######################################################################################################################################
+######################################################################################################################################
+# PLOTTING/PERFORMANCE FUNCTIONS
+######################################################################################################################################
+######################################################################################################################################
+
+def plot_acc_loss(histo):
+  ##Plot for the accuracy of the baseline model 
+  accuracy_train = histo.history['accuracy']
+  accuracy_val = histo.history['val_accuracy']
+  plt.plot(accuracy_train, label='training_accuracy')
+  plt.plot(accuracy_val, label='validation_accuracy')
+  plt.title('ACCURACY OF THE MODEL')
+  plt.xlabel('Epochs')
+  plt.ylabel('Accuracy')
+  plt.legend()
+  plt.show()
+
+  ##Plot for the loss of the baseline model 
+  loss_train = histo.history['loss']
+  loss_val = histo.history['val_loss']
+  plt.plot(loss_train, label='training_loss')
+  plt.plot(loss_val, label='validation_loss')
+  plt.title('LOSS OF MODEL')
+  plt.xlabel('Epochs')
+  plt.ylabel('Loss')
+  plt.legend()
+  plt.show()
+  return 
+
+
+def plot_ROC_curve(y_predict,y_test,num_clas): 
+
+  fpr = {}
+  tpr = {}
+  roc_auc = {}
+  #calculating roc for each class
+  for i in range(num_clas):
+      fpr[i], tpr[i], _ = roc_curve(y_test[:,i], y_predict[:,i])
+      roc_auc[i] = auc(fpr[i], tpr[i])
+  
+  # calculating micro-average ROC curve and  area
+  fpr_micro, tpr_micro, _ = roc_curve(y_test.ravel(), y_predict.ravel())
+  roc_auc_micro = roc_auc_score(y_test.ravel(), y_predict.ravel())
+
+  # Compute macro-average ROC curve and  area
+  fpr_macro = np.unique(np.concatenate([fpr[i] for i in range(num_clas)]))
+  tpr_macro = np.zeros_like(fpr_macro)
+  for i in range(num_clas):
+      tpr_macro += np.interp(fpr_macro, fpr[i], tpr[i])
+  tpr_macro /= num_clas
+  roc_auc_macro = auc(fpr_macro, tpr_macro)
+
+  #Plot the ROC curve for each class using matplotlib.pyplot.plot()
+  plt.figure(figsize=(10, 5))
+  lw = 2
+  for i in range(num_clas):
+      plt.plot(fpr[i], tpr[i], lw=lw, label='ROC curve of class %d (area = %0.2f)' % (i, roc_auc[i]))
+  plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+  plt.plot(fpr_micro, tpr_micro,lw=lw, linestyle='--', label='micro-average ROC curve (area = %0.2f)' % (roc_auc_micro))
+  plt.plot(fpr_macro, tpr_macro,lw=lw, linestyle='--', label='macro-average ROC curve (area = %0.2f)' % (roc_auc_macro))
+  plt.xlim([0.0, 1.0])
+  plt.ylim([0.0, 1.05])
+  plt.xlabel('False Positive Rate')
+  plt.ylabel('True Positive Rate')
+  plt.title('Receiver Operating Characteristic of Multiclass')
+  plt.legend(loc="lower right")
+  plt.show()
+  return 
+
+
+def plot_cm(label_ma,y_predict,y_tes):
+  #reversing pred to categorical so to get the labels 
+  inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
+  y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
+  y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
+
+  #confusion matrix 
+  
+  cm = confusion_matrix(y_tes, y_pred_decoded_categorical)
+  classes = np.unique(y_tes)
+  # plot the confusion matrix
+  fig, ax = plt.subplots()
+  im = ax.imshow(cm, interpolation='nearest', cmap='Reds')
+  ax.figure.colorbar(im, ax=ax)
+  ax.set(xticks=np.arange(cm.shape[1]), yticks=np.arange(cm.shape[0]), xticklabels=classes, yticklabels=classes, ylabel='True label', xlabel='Predicted label')
+
+  # rotate the labels
+  plt.setp(ax.get_xticklabels(), rotation=20, ha="right", rotation_mode="anchor")
+  # text annotations like the numbers inside 
+  thresh = cm.max() / 2.
+  for i in range(cm.shape[0]):
+      for j in range(cm.shape[1]):
+          ax.text(j, i, format(cm[i, j], 'd'), ha="center", va="center", color="white" if cm[i, j] > thresh else "black")
+  plt.show()
+  return
+
+
+def table_p_r_f1(y_tes,y_predict, label_ma):
+  
+  inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
+  y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
+  y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
+
+  print(classification_report(y_test, y_pred_decoded_categorical))

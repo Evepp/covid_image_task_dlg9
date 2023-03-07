@@ -1,63 +1,47 @@
 # Imports
-import warnings
-warnings.simplefilter(action='ignore')
-import keras
-import json
-import numpy as np
-import glob
-import pandas as pd
+from PIL import Image
 
-from sklearn.model_selection import KFold
-
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers, models
+from keras.applications.vgg16 import VGG16
+from keras.callbacks import EarlyStopping
+from keras.models import Model
 from keras.regularizers import l2
 
-from tensorflow import keras
-import keras.backend as K
-import matplotlib.pyplot as plt
-
-import optuna
-import tensorflow as tf
-from tensorflow import keras
-
-from tensorflow import keras
-from sklearn.model_selection import GridSearchCV
-
-import urllib.request
-from PIL import Image
-from keras import layers, models
-import tensorflow as tf
-from tensorflow.keras.layers import LeakyReLU
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
 from skimage import io, color
-import random
-from keras.applications.vgg16 import VGG16
-from tensorflow.keras import layers
-from keras.models import Model
-from keras.callbacks import EarlyStopping
-from tensorflow import keras
-import matplotlib.pyplot as plt
-import matplotlib 
-from sklearn.metrics import confusion_matrix
+
+from sklearn import preprocessing
 from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve, auc
-import matplotlib.pyplot as plt
-from tensorflow import keras
-import keras.backend as K
-import matplotlib.pyplot as plt
-from keras.regularizers import l2
-import tensorflow as tf
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
+
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras.layers import LeakyReLU
+
+import glob
+import json
+import keras
+import keras.backend as K
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import optuna
+import pandas as pd
+import random
+import tensorflow as tf
+import urllib.request
+
+import warnings
+warnings.simplefilter(action='ignore')
 
 
 ######################################################################################################################################
 ######################################################################################################################################
-# SAMPLE RESTRICTION RELATED FUNCTIONS
+# RANDOM SUBSAMPLING RELATED FUNCTIONS
 ######################################################################################################################################
 ######################################################################################################################################
 
@@ -361,7 +345,7 @@ def build_tuned_model():
 
 ######################################################################################################################################
 ######################################################################################################################################
-# HYBRID MODEL
+# RESNET MODEL
 ######################################################################################################################################
 ######################################################################################################################################
 
@@ -569,7 +553,7 @@ def plot_comparison_acc_loss(models_compared,name_models, numepoch):
 
 ######################################################################################################################################
 ######################################################################################################################################
-# GRID SEARCH MODEL
+# GRID SEARCH 
 ######################################################################################################################################
 ######################################################################################################################################
     

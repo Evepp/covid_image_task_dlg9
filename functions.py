@@ -11,6 +11,7 @@ import urllib.request
 from PIL import Image
 from keras import layers, models
 import tensorflow as tf
+from tensorflow.keras.layers import LeakyReLU
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from skimage import io, color
@@ -301,37 +302,39 @@ def build_baseline_model():
 ######################################################################################################################################
 
 
+# TUNED MODEL 1: 
+# BASELINE + LR: Nadam + KFOLD VALIDATION + EARLY STOPPING + LeakyReLU + Extra Dense layer + 3 Dropout layers + Doubled batch size to 64
+
+# FAILED CHANGES VS BASELINE INDICATED WITH A HASHTAG
+
 def build_tuned_model():
     model = keras.Sequential([
     # Convolutional layers
-    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.01), input_shape=(156, 156, 3),kernel_regularizer=l2(0.01)),
-    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=LeakyReLU(), input_shape=(156, 156, 3)),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=LeakyReLU()),
     keras.layers.MaxPooling2D(pool_size=(2, 2)),
-    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
-    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=LeakyReLU()),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=LeakyReLU()),
     keras.layers.MaxPooling2D(pool_size=(2, 2)),
-    # (CHANGE VS BASELINE) Adding another pack of Conv2D and MaxPooling2D layers
-    #keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
-    #keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
+    keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=LeakyReLU()),
+    keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=LeakyReLU()),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    # (FAILED CHANGE VS BASELINE) Adding another pack of Conv2D and MaxPooling2D layers
+    #keras.layers.Conv2D(filters=64, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
+    #keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
     #keras.layers.MaxPooling2D(pool_size=(2, 2)),
-    keras.layers.Conv2D(filters=64, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
-    keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), kernel_regularizer=l2(0.01)),
-    keras.layers.MaxPooling2D(pool_size=(2, 2)),
-  
     # Dense layers
     keras.layers.Flatten(),
-    keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
-    # (CHANGE VS BASELINE) Adding Dropout
-    #keras.layers.Dropout(0.3),
-    keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1), kernel_regularizer=l2(0.01)),
-    # (CHANGE VS BASELINE) Adding an extra dense layer
-    #keras.layers.Dense(16, activation=keras.layers.LeakyReLU(alpha=0.1)),
-    # (CHANGE VS BASELINE) Adding Dropout
-    #keras.layers.Dropout(0.3)
+    keras.layers.Dense(32, activation=LeakyReLU()),
+    keras.layers.Dropout(0.2),
+    keras.layers.Dense(32, activation=LeakyReLU()),
+    keras.layers.Dropout(0.2),    
+    keras.layers.Dense(32, activation=LeakyReLU()),
+    keras.layers.Dropout(0.2),
     keras.layers.Dense(4, activation='softmax')])
     # Compile the model with appropriate loss function, optimizer, and metrics
-    # (CHANGE VS BASELINE) Adding the optimal lr
-    optim = keras.optimizers.Nadam(learning_rate=0.001) #(CHANGE VS BASELINE) optimizer = adam, nadam, sgd, rmsprop
+    # (FAILED CHANGE VS BASELINE) Adding the optimal using lr schedule for SGD
+    optim = keras.optimizers.Nadam(learning_rate=0.001) #(FAILED CHANGE VS BASELINE) optimizer = adam, sgd, rmsprop
 
     model.compile(loss='categorical_crossentropy', optimizer=optim, metrics=['accuracy'])
     return model
@@ -349,33 +352,33 @@ def build_h_model():
     input_shape = (156, 156, 3)
     inputs = keras.Input(shape=input_shape)
      # Convolutional layers
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.01),  padding='same')(inputs)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(),  padding='same')(inputs)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
 
     #  block 1
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
     x = keras.layers.LeakyReLU(alpha=0.1)(x)
 
     #  block 2
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
     x = keras.layers.LeakyReLU(alpha=0.1)(x)
     #  block 3
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU()), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
-    x = keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = keras.layers.LeakyReLU()(x)
     # Dense layers
     x = keras.layers.Flatten()(x)
-    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
-    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
     outputs = keras.layers.Dense(4, activation='softmax')(x)
     optim = keras.optimizers.Nadam(learning_rate=0.001) 
 

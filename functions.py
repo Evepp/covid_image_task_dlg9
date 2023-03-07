@@ -29,7 +29,7 @@ import keras.backend as K
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import optuna
+#import optuna
 import pandas as pd
 import random
 import tensorflow as tf
@@ -373,7 +373,7 @@ def build_h_model():
     x = keras.layers.LeakyReLU(alpha=0.1)(x)
     #  block 3
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU()), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
     x = keras.layers.LeakyReLU()(x)
@@ -470,7 +470,7 @@ def plot_cm(label_ma,y_predict,y_tes):
     #reversing pred to categorical so to get the labels 
     inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
     y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
-    y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numer
+    y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
     #confusion matrix 
     
     cm = confusion_matrix(y_tes, y_pred_decoded_categorical)
@@ -479,18 +479,18 @@ def plot_cm(label_ma,y_predict,y_tes):
     fig, ax = plt.subplots()
     im = ax.imshow(cm, interpolation='nearest', cmap='Reds')
     ax.figure.colorbar(im, ax=ax)
-     ax.set(xticks=np.arange(cm.shape[1]), yticks=np.arange(cm.shape[0]), xticklabels=classes, yticklabels=classes, ylabel='True label',
+    ax.set(xticks=np.arange(cm.shape[1]), yticks=np.arange(cm.shape[0]), xticklabels=classes, yticklabels=classes, ylabel='True label',
              xlabel='Predicted label')
 
-  # rotate the labels
-  plt.setp(ax.get_xticklabels(), rotation=20, ha="right", rotation_mode="anchor")
-  # text annotations like the numbers inside 
-  thresh = cm.max() / 2.
-  for i in range(cm.shape[0]):
+    # rotate the labels
+    plt.setp(ax.get_xticklabels(), rotation=20, ha="right", rotation_mode="anchor")
+    # text annotations like the numbers inside 
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
       for j in range(cm.shape[1]):
           ax.text(j, i, format(cm[i, j], 'd'), ha="center", va="center", color="white" if cm[i, j] > thresh else "black")
-  plt.show()
-  return
+    plt.show()
+    return
 
 
 def table_p_r_f1(y_tes,y_predict, label_ma):
@@ -506,7 +506,7 @@ def table_p_r_f1(y_tes,y_predict, label_ma):
 def plot_comparison_acc_loss(models_compared,name_models, numepoch):
     epoch = range(1, numepoch+1)
     clr=['b','r','y','g','k','c']
-    plt.figure(figsize=(10, 8)
+    plt.figure(figsize=(10, 8))
     # Plotting the results of validation accuracy and loss for the baseline and tuned models
     plt.subplot(2, 2, 1)
     i=0
@@ -537,7 +537,7 @@ def plot_comparison_acc_loss(models_compared,name_models, numepoch):
     plt.title('Training accuracy comparison')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
-    plt.legend(
+    plt.legend()
     i=0
     plt.subplot(2, 2, 4)
     while i<len(models_compared):
@@ -546,7 +546,7 @@ def plot_comparison_acc_loss(models_compared,name_models, numepoch):
     plt.title('Training loss comparison')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
-    plt.legend(
+    plt.legend()
     plt.subplots_adjust(hspace=0.4,wspace=0.4)
     plt.show()
     

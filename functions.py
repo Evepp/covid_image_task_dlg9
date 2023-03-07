@@ -7,6 +7,24 @@ import numpy as np
 import glob
 import pandas as pd
 
+from sklearn.model_selection import KFold
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from keras.regularizers import l2
+
+from tensorflow import keras
+import keras.backend as K
+import matplotlib.pyplot as plt
+
+import optuna
+import tensorflow as tf
+from tensorflow import keras
+
+from tensorflow import keras
+from sklearn.model_selection import GridSearchCV
+
 import urllib.request
 from PIL import Image
 from keras import layers, models
@@ -400,85 +418,85 @@ def build_h_model():
 ######################################################################################################################################
 
 def plot_acc_loss(histo):
-  ##Plot for the accuracy of the baseline model 
-  accuracy_train = histo.history['accuracy']
-  accuracy_val = histo.history['val_accuracy']
-  plt.plot(accuracy_train, label='training_accuracy')
-  plt.plot(accuracy_val, label='validation_accuracy')
-  plt.title('ACCURACY OF THE MODEL')
-  plt.xlabel('Epochs')
-  plt.ylabel('Accuracy')
-  plt.legend()
-  plt.show()
-
-  ##Plot for the loss of the baseline model 
-  loss_train = histo.history['loss']
-  loss_val = histo.history['val_loss']
-  plt.plot(loss_train, label='training_loss')
-  plt.plot(loss_val, label='validation_loss')
-  plt.title('LOSS OF MODEL')
-  plt.xlabel('Epochs')
-  plt.ylabel('Loss')
-  plt.legend()
-  plt.show()
-  return 
+     ##Plot for the accuracy of the baseline model 
+    accuracy_train = histo.history['accuracy']
+    accuracy_val = histo.history['val_accuracy']
+    plt.plot(accuracy_train, label='training_accuracy')
+    plt.plot(accuracy_val, label='validation_accuracy')
+    plt.title('ACCURACY OF THE MODEL')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+    
+    ##Plot for the loss of the baseline model 
+    loss_train = histo.history['loss']
+    loss_val = histo.history['val_loss']
+    plt.plot(loss_train, label='training_loss')
+    plt.plot(loss_val, label='validation_loss')
+    plt.title('LOSS OF MODEL')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+    return 
 
 
 def plot_ROC_curve(y_predict,y_test,num_clas): 
 
-  fpr = {}
-  tpr = {}
-  roc_auc = {}
-  #calculating roc for each class
-  for i in range(num_clas):
-      fpr[i], tpr[i], _ = roc_curve(y_test[:,i], y_predict[:,i])
-      roc_auc[i] = auc(fpr[i], tpr[i])
+    fpr = {}
+    tpr = {}
+    roc_auc = {}
+    #calculating roc for each class
+    for i in range(num_clas):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:,i], y_predict[:,i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
   
   # calculating micro-average ROC curve and  area
-  fpr_micro, tpr_micro, _ = roc_curve(y_test.ravel(), y_predict.ravel())
-  roc_auc_micro = roc_auc_score(y_test.ravel(), y_predict.ravel())
+    fpr_micro, tpr_micro, _ = roc_curve(y_test.ravel(), y_predict.ravel())
+    roc_auc_micro = roc_auc_score(y_test.ravel(), y_predict.ravel())
 
   # Compute macro-average ROC curve and  area
-  fpr_macro = np.unique(np.concatenate([fpr[i] for i in range(num_clas)]))
-  tpr_macro = np.zeros_like(fpr_macro)
-  for i in range(num_clas):
-      tpr_macro += np.interp(fpr_macro, fpr[i], tpr[i])
-  tpr_macro /= num_clas
-  roc_auc_macro = auc(fpr_macro, tpr_macro)
+    fpr_macro = np.unique(np.concatenate([fpr[i] for i in range(num_clas)]))
+    tpr_macro = np.zeros_like(fpr_macro)
+    for i in range(num_clas):
+        tpr_macro += np.interp(fpr_macro, fpr[i], tpr[i])
+    tpr_macro /= num_clas
+    roc_auc_macro = auc(fpr_macro, tpr_macro)
 
   #Plot the ROC curve for each class using matplotlib.pyplot.plot()
-  plt.figure(figsize=(10, 5))
-  lw = 2
-  for i in range(num_clas):
-      plt.plot(fpr[i], tpr[i], lw=lw, label='ROC curve of class %d (area = %0.2f)' % (i, roc_auc[i]))
-  plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-  plt.plot(fpr_micro, tpr_micro,lw=lw, linestyle='--', label='micro-average ROC curve (area = %0.2f)' % (roc_auc_micro))
-  plt.plot(fpr_macro, tpr_macro,lw=lw, linestyle='--', label='macro-average ROC curve (area = %0.2f)' % (roc_auc_macro))
-  plt.xlim([0.0, 1.0])
-  plt.ylim([0.0, 1.05])
-  plt.xlabel('False Positive Rate')
-  plt.ylabel('True Positive Rate')
-  plt.title('Receiver Operating Characteristic of Multiclass')
-  plt.legend(loc="lower right")
-  plt.show()
-  return 
+    plt.figure(figsize=(10, 5))
+    lw = 2
+    for i in range(num_clas):
+        plt.plot(fpr[i], tpr[i], lw=lw, label='ROC curve of class %d (area = %0.2f)' % (i, roc_auc[i]))
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.plot(fpr_micro, tpr_micro,lw=lw, linestyle='--', label='micro-average ROC curve (area = %0.2f)' % (roc_auc_micro))
+    plt.plot(fpr_macro, tpr_macro,lw=lw, linestyle='--', label='macro-average ROC curve (area = %0.2f)' % (roc_auc_macro))
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic of Multiclass')
+    plt.legend(loc="lower right")
+    plt.show()
+    return 
 
 
 def plot_cm(label_ma,y_predict,y_tes):
-  #reversing pred to categorical so to get the labels 
-  inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
-  y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
-  y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
-
-  #confusion matrix 
-  
-  cm = confusion_matrix(y_tes, y_pred_decoded_categorical)
-  classes = np.unique(y_tes)
-  # plot the confusion matrix
-  fig, ax = plt.subplots()
-  im = ax.imshow(cm, interpolation='nearest', cmap='Reds')
-  ax.figure.colorbar(im, ax=ax)
-  ax.set(xticks=np.arange(cm.shape[1]), yticks=np.arange(cm.shape[0]), xticklabels=classes, yticklabels=classes, ylabel='True label', xlabel='Predicted label')
+    #reversing pred to categorical so to get the labels 
+    inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
+    y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
+    y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numer
+    #confusion matrix 
+    
+    cm = confusion_matrix(y_tes, y_pred_decoded_categorical)
+    classes = np.unique(y_tes)
+    # plot the confusion matrix
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap='Reds')
+    ax.figure.colorbar(im, ax=ax)
+     ax.set(xticks=np.arange(cm.shape[1]), yticks=np.arange(cm.shape[0]), xticklabels=classes, yticklabels=classes, ylabel='True label',
+             xlabel='Predicted label')
 
   # rotate the labels
   plt.setp(ax.get_xticklabels(), rotation=20, ha="right", rotation_mode="anchor")
@@ -493,60 +511,173 @@ def plot_cm(label_ma,y_predict,y_tes):
 
 def table_p_r_f1(y_tes,y_predict, label_ma):
   
-  inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
-  y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
-  y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
+    inverse_label_map = {v: k for k, v in label_ma.items()}  # invert the label_map
+    y_pred_decoded_numerical = np.argmax(y_predict, axis=1)
+    y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
 
-  print(classification_report(y_test, y_pred_decoded_categorical))
+    print(classification_report(y_test, y_pred_decoded_categorical))
 
 
 
 def plot_comparison_acc_loss(models_compared,name_models, numepoch):
-  epoch = range(1, numepoch+1)
-  clr=['b','r','y','g','k','c']
-  plt.figure(figsize=(10, 8))
+    epoch = range(1, numepoch+1)
+    clr=['b','r','y','g','k','c']
+    plt.figure(figsize=(10, 8)
+    # Plotting the results of validation accuracy and loss for the baseline and tuned models
+    plt.subplot(2, 2, 1)
+    i=0
+    while i<len(models_compared):
+      plt.plot(epoch, models_compared[i].history['val_accuracy'], clr[i], label=name_models[i])
+      i+=1
+    plt.title('Validation accuracy comparison')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    
+    i=0
+    plt.subplot(2, 2, 2)
+    while i<len(models_compared):
+      plt.plot(epoch, models_compared[i].history['val_loss'], clr[i], label=name_models[i])
+      i+=1
+    plt.title('Validation loss comparison')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    i=0
+    # Plotting the results of training accuracy and loss for the baseline and tuned models  
+    plt.subplot(2, 2, 3)
+    while i<len(models_compared):
+      plt.plot(epoch, models_compared[i].history['accuracy'], clr[i], label=name_models[i])
+      i+=1
+    plt.title('Training accuracy comparison')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend(
+    i=0
+    plt.subplot(2, 2, 4)
+    while i<len(models_compared):
+      plt.plot(epoch, models_compared[i].history['loss'], clr[i], label=name_models[i])
+      i+=1
+    plt.title('Training loss comparison')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend(
+    plt.subplots_adjust(hspace=0.4,wspace=0.4)
+    plt.show()
+    
 
-  # Plotting the results of validation accuracy and loss for the baseline and tuned models
-  plt.subplot(2, 2, 1)
-  i=0
-  while i<len(models_compared):
-    plt.plot(epoch, models_compared[i].history['val_accuracy'], clr[i], label=name_models[i])
-    i+=1
-  plt.title('Validation accuracy comparison')
-  plt.xlabel('Epochs')
-  plt.ylabel('Accuracy')
-  plt.legend()
-  
-  i=0
-  plt.subplot(2, 2, 2)
-  while i<len(models_compared):
-    plt.plot(epoch, models_compared[i].history['val_loss'], clr[i], label=name_models[i])
-    i+=1
-  plt.title('Validation loss comparison')
-  plt.xlabel('Epochs')
-  plt.ylabel('Loss')
-  plt.legend()
-  
-  i=0
-  # Plotting the results of training accuracy and loss for the baseline and tuned models  
-  plt.subplot(2, 2, 3)
-  while i<len(models_compared):
-    plt.plot(epoch, models_compared[i].history['accuracy'], clr[i], label=name_models[i])
-    i+=1
-  plt.title('Training accuracy comparison')
-  plt.xlabel('Epochs')
-  plt.ylabel('Accuracy')
-  plt.legend()
+######################################################################################################################################
+######################################################################################################################################
+# GRID SEARCH MODEL
+######################################################################################################################################
+######################################################################################################################################
+    
+    
+    
+def build_optimized_model(alpha1,alpha2,alpha3,alpha4,alpha5):
+    model = keras.Sequential([
+        # Convolutional layers
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=alpha1), input_shape=(156, 156, 3)),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=alpha1)),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=alpha2)),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=alpha2)),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(filters=64, kernel_size=(3, 3),activation=keras.layers.LeakyReLU(alpha=alpha3)),
+        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=alpha3)),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        
+        # Dense layers
+        keras.layers.Flatten(),
+        keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=alpha4)),
+        keras.layers.Dense(32,activation=keras.layers.LeakyReLU(alpha=alpha5)),
+        keras.layers.Dense(4,activation='softmax')
+    ])
 
-  i=0
-  plt.subplot(2, 2, 4)
-  while i<len(models_compared):
-    plt.plot(epoch, models_compared[i].history['loss'], clr[i], label=name_models[i])
-    i+=1
-  plt.title('Training loss comparison')
-  plt.xlabel('Epochs')
-  plt.ylabel('Loss')
-  plt.legend()
+    # Compile the model with appropriate loss function, optimizer, and metrics
+    optim = keras.optimizers.Nadam(learning_rate=0.001)
+    model.compile(loss='categorical_crossentropy', optimizer=optim, metrics=['accuracy'])
 
-  plt.subplots_adjust(hspace=0.4,wspace=0.4)
-  plt.show()
+    return model
+        
+        
+######################################################################################################################################
+######################################################################################################################################
+# OPTUNA
+######################################################################################################################################
+######################################################################################################################################
+        
+def create_model(trial):
+    model = keras.Sequential([
+        # Convolutional layers
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_1', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_1', [(3, 3), (5, 5)]),
+            activation='relu',
+            input_shape=(156, 156, 3)
+        ),
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_2', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_2', [(3, 3), (5, 5)]),
+            activation='relu'
+        ),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_3', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_3', [(3, 3), (5, 5)]),
+            activation='relu'
+        ),
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_4', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_4', [(3, 3), (5, 5)]),
+            activation='relu'
+        ),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_5', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_5', [(3, 3), (5, 5)]),
+            activation='relu'
+        ),
+        keras.layers.Conv2D(
+            filters=trial.suggest_categorical('filters_6', [32, 64, 128]),
+            kernel_size=trial.suggest_categorical('kernel_size_6', [(3, 3), (5, 5)]),
+            activation='relu'
+        ),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        # Dense layers
+        keras.layers.Flatten(),
+        keras.layers.Dense(units=trial.suggest_int('units_1', 16, 128), activation='relu'),
+        keras.layers.Dense(units=trial.suggest_int('units_2', 16, 128), activation='relu'),
+        keras.layers.Dense(units=4, activation='softmax')
+    ])
+
+    # Compile the model with appropriate loss function, optimizer, and metrics
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer=keras.optimizers.Adam(
+            learning_rate=trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
+        ),
+        metrics=['accuracy']
+    )
+    
+    return model
+
+        
+def objective(trial):
+    # Create the model with the hyperparameters suggested by Optuna
+    model = create_model(trial)
+    
+    # Train the model for 5 epochs
+    history = model.fit(
+        X_train_norm,
+        y_train_onehot,
+        batch_size=32,
+        epochs=5,
+        validation_data=(X_val_norm, y_val_onehot),
+        verbose=0
+    )
+        
+# Evaluate the model
+    loss = history.history['val_loss'][-1]
+    return loss

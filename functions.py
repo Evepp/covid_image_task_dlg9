@@ -279,9 +279,6 @@ def build_baseline_model():
         keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
         keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
         keras.layers.MaxPooling2D(pool_size=(2, 2)),
-        keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
-        keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=(2, 2)),
         
         # Dense layers
         keras.layers.Flatten(),

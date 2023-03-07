@@ -352,33 +352,33 @@ def build_h_model():
     input_shape = (156, 156, 3)
     inputs = keras.Input(shape=input_shape)
      # Convolutional layers
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.01),  padding='same')(inputs)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.01), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(),  padding='same')(inputs)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
 
     #  block 1
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
     x = keras.layers.LeakyReLU(alpha=0.1)(x)
 
     #  block 2
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
     x = keras.layers.LeakyReLU(alpha=0.1)(x)
     #  block 3
     out=x
-    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
-    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(alpha=0.1), padding='same')(x)
+    x = keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=keras.layers.LeakyReLU()), padding='same')(x)
+    x = keras.layers.Conv2D(filters=32, kernel_size=(3, 3),  activation=keras.layers.LeakyReLU(), padding='same')(x)
     x = keras.layers.add([out, x])
-    x = keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = keras.layers.LeakyReLU()(x)
     # Dense layers
     x = keras.layers.Flatten()(x)
-    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
-    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU(alpha=0.1))(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
+    x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
     outputs = keras.layers.Dense(4, activation='softmax')(x)
     optim = keras.optimizers.Nadam(learning_rate=0.001) 
 

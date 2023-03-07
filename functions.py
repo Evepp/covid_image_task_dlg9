@@ -378,7 +378,9 @@ def build_h_model():
     # Dense layers
     x = keras.layers.Flatten()(x)
     x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
+    x = keras.layers.Dropout(0.2)(x)
     x = keras.layers.Dense(32, activation=keras.layers.LeakyReLU())(x)
+    x = keras.layers.Dropout(0.2)(x)
     outputs = keras.layers.Dense(4, activation='softmax')(x)
     optim = keras.optimizers.Nadam(learning_rate=0.001) 
 
@@ -496,3 +498,55 @@ def table_p_r_f1(y_tes,y_predict, label_ma):
   y_pred_decoded_categorical = np.vectorize(inverse_label_map.get)(y_pred_decoded_numerical)
 
   print(classification_report(y_test, y_pred_decoded_categorical))
+
+
+
+def plot_comparison_acc_loss(models_compared,name_models, numepoch):
+  epoch = range(1, numepoch+1)
+  clr=['b','r','y','g','k','c']
+  plt.figure(figsize=(10, 8))
+
+  # Plotting the results of validation accuracy and loss for the baseline and tuned models
+  plt.subplot(2, 2, 1)
+  i=0
+  while i<len(models_compared):
+    plt.plot(epoch, models_compared[i].history['val_accuracy'], clr[i], label=name_models[i])
+    i+=1
+  plt.title('Validation accuracy comparison')
+  plt.xlabel('Epochs')
+  plt.ylabel('Accuracy')
+  plt.legend()
+  
+  i=0
+  plt.subplot(2, 2, 2)
+  while i<len(models_compared):
+    plt.plot(epoch, models_compared[i].history['val_loss'], clr[i], label=name_models[i])
+    i+=1
+  plt.title('Validation loss comparison')
+  plt.xlabel('Epochs')
+  plt.ylabel('Loss')
+  plt.legend()
+  
+  i=0
+  # Plotting the results of training accuracy and loss for the baseline and tuned models  
+  plt.subplot(2, 2, 3)
+  while i<len(models_compared):
+    plt.plot(epoch, models_compared[i].history['accuracy'], clr[i], label=name_models[i])
+    i+=1
+  plt.title('Training accuracy comparison')
+  plt.xlabel('Epochs')
+  plt.ylabel('Accuracy')
+  plt.legend()
+
+  i=0
+  plt.subplot(2, 2, 4)
+  while i<len(models_compared):
+    plt.plot(epoch, models_compared[i].history['loss'], clr[i], label=name_models[i])
+    i+=1
+  plt.title('Training loss comparison')
+  plt.xlabel('Epochs')
+  plt.ylabel('Loss')
+  plt.legend()
+
+  plt.subplots_adjust(hspace=0.4,wspace=0.4)
+  plt.show()
